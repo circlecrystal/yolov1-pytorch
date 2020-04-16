@@ -10,3 +10,4 @@ weights/
 ./*.jpg
 *.txt
 *.pyc
+*.DS_Store
