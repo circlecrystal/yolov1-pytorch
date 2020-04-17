@@ -20,7 +20,6 @@ class VocDataset(Dataset):
         self.bbox = []
         self.classes = []
         for line in lines:
-            print("LINE: {}".format(line))
             splited_line = line.split()
             self.images.append(splited_line[0])
             num_boxes = (len(splited_line) - 1) // 5
