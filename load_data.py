@@ -90,6 +90,8 @@ class VocDataset(Dataset):
         labels = self.classes[idx].clone()
 
         if self.augmentation:
+            print("type(boxes): {}".format(type(boxes)))
+            print("boxes: {}".format(boxes))
             img, boxes = self.random_flip(img, boxes)
             img, boxes = self.randomScale(img, boxes)
             # img = self.randomBlur(img)
