@@ -537,12 +537,10 @@ def predict_eval(test_file, model_name, weight,use_gpu=True):
     for k in range(classes):
         fps.append(open('%s_%s' % (base, voc_class_names[k]), 'w'))
 
-    for imp in tqdm(lines):
-        print("imp: {}".format(imp))
-        imgid = imp.split('/')[-1].split('.')[0]
-        print("imgid: {}".format(imgid))
+    for line in tqdm(lines):
+        imgid = line.split('/')[-1].split('.')[0]
         # print(imgid)
-        img = cv2.imread(imp)
+        img = cv2.imread(line.split()[0])
         h, w, _ = img.shape
         pred = get_pred(img,model,use_gpu)
         # pred = pred.cpu()
