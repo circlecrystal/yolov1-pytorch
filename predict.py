@@ -538,6 +538,7 @@ def predict_eval(test_file, model_name, weight,use_gpu=True):
         fps.append(open('%s_%s' % (base, voc_class_names[k]), 'w'))
 
     for imp in tqdm(lines):
+        print("imp: {}".format(imp))
         imgid = imp.split('/')[-1].split('.')[0]
         # print(imgid)
         img = cv2.imread(imp)
