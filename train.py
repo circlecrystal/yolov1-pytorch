@@ -49,7 +49,7 @@ inp_size = int(d['inp_size'])
 # weight_decay = float(d['weight_decay'])
 visualize = True
 log = True
-validate = False
+validate = True
 vischange = False
 save_final = False
 
