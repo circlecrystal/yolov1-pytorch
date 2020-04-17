@@ -57,12 +57,12 @@ data_transforms = transforms.Compose([
     # transforms.ToTensor(),
 ])
 
-train_dataset = VocDataset('data/train07.txt', side=side, num=num, input_size=inp_size, augmentation=True, transform=data_transforms)
+train_dataset = VocDataset('data/train.txt', side=side, num=num, input_size=inp_size, augmentation=True, transform=data_transforms)
 train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 # train_dataset_size = len(train_dataset)
 train_loader_size = len(train_dataloader)
 
-test_dataset = VocDataset('data/voc_2007_test.txt', side=side, num=num, input_size=inp_size, augmentation=False, transform=data_transforms)
+test_dataset = VocDataset('data/2007_test.txt', side=side, num=num, input_size=inp_size, augmentation=False, transform=data_transforms)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
 test_loader_size = len(test_loader)
 
