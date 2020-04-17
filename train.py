@@ -12,7 +12,6 @@ import numpy as np
 import torch.nn as nn
 # from mmodels import mvgg
 import os
-from visualize import Visualizer
 #from adabound import adabound
 import argparse
 import sys
@@ -220,6 +219,7 @@ if env is None:
     # sys.exit(1)
 vis = None
 if visualize:
+    from visualize import Visualizer
     vis = Visualizer(env='{}{}_{}'.format(model_name, env, time.strftime('%m%d%H%M')))
 if log:
     if not os.path.exists('log'):
