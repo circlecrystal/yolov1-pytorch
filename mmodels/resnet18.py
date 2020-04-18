@@ -7,7 +7,7 @@ class YoloConv(torch.nn.Module):
         super().__init__()
         self.yolo_conv = torch.nn.Sequential(
             torch.nn.MaxPool2d(2, 2),
-            torch.nn.Conv2d(2048, depth, 3, 1, 1),
+            torch.nn.Conv2d(512, depth, 3, 1, 1),
             torch.nn.BatchNorm2d(depth),
             torch.nn.Sigmoid()
         )
@@ -37,7 +37,7 @@ class YoloFC(torch.nn.Module):
         self.yolo_fc = torch.nn.Sequential(
             torch.nn.AdaptiveAvgPool2d(1),
             torch.nn.Flatten(1),
-            torch.nn.Linear(2048, num_cells_x * num_cells_y * self.depth),
+            torch.nn.Linear(512, num_cells_x * num_cells_y * self.depth),
             torch.nn.Sigmoid()
         )
 
@@ -49,8 +49,8 @@ class YoloFC(torch.nn.Module):
         return x
 
 
-class ResNet50(torch.nn.Module):
-    """The ResNet50 backbone.
+class ResNet18(torch.nn.Module):
+    """The ResNet18 backbone.
     """
 
     def __init__(self, num_cells_x=7, num_cells_y=7, num_boxes=2,
@@ -68,21 +68,21 @@ class ResNet50(torch.nn.Module):
         depth = 5 * num_boxes + num_categories
 
         # Import the backbone net
-        resnet50 = torchvision.models.resnet50(pretrained=False)
+        resnet18 = torchvision.models.resnet18(pretrained=False)
 
         # Extracting the layers
         self.layer1 = torch.nn.Sequential(
-            resnet50.conv1,
-            resnet50.bn1,
-            resnet50.relu,
-            resnet50.maxpool
+            resnet18.conv1,
+            resnet18.bn1,
+            resnet18.relu,
+            resnet18.maxpool
         )
-        self.layer2 = resnet50.layer1
-        self.layer3 = resnet50.layer2
-        self.layer4 = resnet50.layer3
-        self.layer5 = resnet50.layer4
-        # self.yololayer = YoloFC(num_cells_x, num_cells_y, depth)
-        self.yololayer = YoloConv(depth)
+        self.layer2 = resnet18.layer1
+        self.layer3 = resnet18.layer2
+        self.layer4 = resnet18.layer3
+        self.layer5 = resnet18.layer4
+        self.yololayer = YoloFC(num_cells_x, num_cells_y, depth)
+        # self.yololayer = YoloConv(depth)
 
     def forward(self, x):
         x = self.layer1(x)
