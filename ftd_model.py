@@ -1,9 +1,11 @@
-from mmodels import mvgg,mresnet
+from mmodels import mvgg, mresnet
+from mmodels.resnet18 import ResNet18
 from torchvision import models
 import torch.nn as nn
 import torch
 from util import readcfg
 import numpy as np
+import os
 import sys
 
 d = readcfg('cfg/yolond')
@@ -181,6 +183,23 @@ def get_model_ft(name, pretrained=True):
                 if k in ft_dict.keys() and not k.startswith('fc'):
                     ft_dict[k] = org_dict[k]
             model_ft.load_state_dict(ft_dict)
+
+    elif name == "resnet18":
+        # Name of output directory
+        output_dir = "1cycle_cell_7"
+
+        # Path to the model
+        model_path = "training_outputs/{}/resnet18_best.pth".format(output_dir)
+        model_path = os.path.join(os.path.dirname("/Workspace/BackboneNet/yolov1"), model_path)
+
+        model = ResNet18(
+            num_cells_x=7,
+            num_cells_y=7,
+            num_boxes=2,
+            num_categories=20
+        )
+        model.load_state_dict(torch.load(model_path))
+        model_ft = model
 
     else:
         return None
