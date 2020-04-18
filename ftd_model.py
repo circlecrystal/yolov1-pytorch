@@ -188,17 +188,12 @@ def get_model_ft(name, pretrained=True):
         # Name of output directory
         output_dir = "1cycle_cell_7"
 
-        # Path to the model
-        model_path = "training_outputs/{}/resnet18_best.pth".format(output_dir)
-        model_path = os.path.join(os.path.dirname("/Workspace/BackboneNet/yolov1"), model_path)
-
         model = ResNet18(
             num_cells_x=7,
             num_cells_y=7,
             num_boxes=2,
             num_categories=20
         )
-        model.load_state_dict(torch.load(model_path))
         model_ft = model
 
     else:
