@@ -43,7 +43,6 @@ def load_model(model_name, weight, mode, use_gpu):
 def img_trans(img):
     # img = cv2.imread(img_name)
 
-    print("img before preprocessing: {}".format(img))
     img = cv2.resize(img, (inp_size, inp_size))
     img = cv2.cvtColor(img, cv2.COLOR_BGR2RGB)
     img = torch.from_numpy(img.transpose((2, 0, 1))).float().div(255.0)
