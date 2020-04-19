@@ -224,9 +224,7 @@ def get_detection_boxes(pred, prob_thresh, nms_thresh, boxes, probs, nms=True):
     return: probs, boxes
     """
     pred = pred.data.squeeze(0)
-    print("softmax?: {}".format(softmax))
-    if softmax:
-        pred[:,:,num*5:] = torch.softmax(pred[:,:,num*5:],2)
+    print("pred: {}".format(pred))
     pred = pred.numpy()
     # probs = np.zeros((side*side*num, classes))
     # boxes = np.zeros((side*side*num, 4))
@@ -255,8 +253,8 @@ def get_detection_boxes(pred, prob_thresh, nms_thresh, boxes, probs, nms=True):
             #     prob = obj * pred[i, j, num * 5 + z]
             #     probs[g*num+k, z] = prob if prob > prob_thresh else 0
 
-    for line in probs:
-        print("prob: {}".format(line))
+    # for line in probs:
+    #     print("prob: {}".format(line))
 
     if nms:
         # since = time.time()
