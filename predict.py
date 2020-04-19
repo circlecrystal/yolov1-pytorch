@@ -304,7 +304,7 @@ def get_pred_1(image,model_name,weight,mode=1,use_gpu=True):
         model.to(gpudevice)
     # h, w, _ = image.shape
     img = img_trans(image)
-    print("NN input: {}".format(input))
+    print("NN input: {}".format(img))
     if use_gpu:
         img = img.to(gpudevice)
     with torch.no_grad():
