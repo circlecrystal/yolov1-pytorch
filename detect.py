@@ -165,10 +165,10 @@ def test(model_name, image_name, weight, prob_thresh=0.2, nms_thresh=0.4, mode=1
             cls_ind = cls_ind[0]
         image = imwrite(image, box, cls_names, cls_ind, prob)
 
-    cv2.imshow("{}".format(image_name), image)
-    cv2.waitKey(0)
+    # cv2.imshow("{}".format(image_name), image)
+    # cv2.waitKey(0)
     cv2.imwrite('bbox_%s.png' % image_name.split('/')[-1].split('.')[0], image)
-    cv2.destroyAllWindows()
+    # cv2.destroyAllWindows()
 
 
 def arg_parse():
