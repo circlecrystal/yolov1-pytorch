@@ -451,6 +451,7 @@ def get_test_result(model_name, image_name, weight, prob_thresh=0.2, nms_thresh=
     maskbox = boxes[mask]
     maskprob = maxprob[mask]
     maskind = maxind[mask]
+    print("mask: {}".format(mask))
     print("maskbox: {}".format(maskbox))
     print("maskprob: {}".format(maskprob))
     print("maskind: {}".format(maskind))
