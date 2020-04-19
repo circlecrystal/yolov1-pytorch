@@ -224,6 +224,7 @@ def get_detection_boxes(pred, prob_thresh, nms_thresh, boxes, probs, nms=True):
     return: probs, boxes
     """
     pred = pred.data.squeeze(0)
+    print("softmax?: {}".format(softmax))
     if softmax:
         pred[:,:,num*5:] = torch.softmax(pred[:,:,num*5:],2)
     pred = pred.numpy()
