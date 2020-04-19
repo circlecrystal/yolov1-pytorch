@@ -175,7 +175,7 @@ def arg_parse():
     arg_parser = argparse.ArgumentParser()
     arg_parser.add_argument("-t", dest="target", default="test", help="[test[2,3]|eval[2,]]", type=str)
     arg_parser.add_argument("-i", dest="imgn", help="image name", type=str)
-    arg_parser.add_argument("-m",dest="mn", default="resnet18", help="model name", type=str)
+    arg_parser.add_argument("-m",dest="mn", default="resnet50", help="model name", type=str)
     arg_parser.add_argument("--mode", dest="mode", default=1, help="model save mode", type=int)
     arg_parser.add_argument("--nms", dest="nms", default=0.4, help="nms thresh", type=float)
     arg_parser.add_argument("--thresh", dest="thresh", default=0.2, help="confidence thresh", type=float)

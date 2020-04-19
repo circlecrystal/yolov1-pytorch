@@ -527,7 +527,7 @@ def predict_eval(test_file, model_name, weight,use_gpu=True):
         lines = f.readlines()
         lines = [line.strip() for line in lines]
 
-    model = load_model(model_name, weight, 0, use_gpu)
+    model = load_model(model_name, weight, 1, use_gpu)
     if use_gpu:
         model.to(gpudevice)
     if not os.path.exists('results'):
