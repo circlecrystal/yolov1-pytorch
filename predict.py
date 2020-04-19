@@ -254,7 +254,8 @@ def get_detection_boxes(pred, prob_thresh, nms_thresh, boxes, probs, nms=True):
             #     prob = obj * pred[i, j, num * 5 + z]
             #     probs[g*num+k, z] = prob if prob > prob_thresh else 0
 
-    print("probs: {}".format(probs))
+    for line in probs:
+        print("prob: {}".format(line))
 
     if nms:
         # since = time.time()
