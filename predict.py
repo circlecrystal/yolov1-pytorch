@@ -431,8 +431,6 @@ def get_test_result(model_name, image_name, weight, prob_thresh=0.2, nms_thresh=
     boxes = np.zeros((total, 4))
     since = time.time()
     get_detection_boxes(pred, prob_thresh, nms_thresh, boxes, probs,True)
-    print("probs: {}".format(probs))
-    print("boxes: {}".format(boxes))
     print("get detection boxe:%fs" % (time.time()-since))
     # with open('C/dets.np','wb') as fp:
     #     absp = os.path.abspath(image_name)
@@ -454,6 +452,9 @@ def get_test_result(model_name, image_name, weight, prob_thresh=0.2, nms_thresh=
     maskbox = boxes[mask]
     maskprob = maxprob[mask]
     maskind = maxind[mask]
+    print("maskbox: {}".format(maskbox))
+    print("maskprob: {}".format(maskprob))
+    print("maskind: {}".format(maskind))
 
     if pd:
         output = postdeal(maskbox,maskprob,maskind,h,w)
