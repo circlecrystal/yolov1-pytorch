@@ -225,9 +225,7 @@ def get_detection_boxes(pred, prob_thresh, nms_thresh, boxes, probs, nms=True):
     """
     pred = pred.data.squeeze(0)
     pred = pred.numpy()
-    print("pred: {}".format(pred))
-    # probs = np.zeros((side*side*num, classes))
-    # boxes = np.zeros((side*side*num, 4))
+    print("prob_thres: {}".format(prob_thres))
 
     for g in range(side*side):
         i = g // side
@@ -240,18 +238,11 @@ def get_detection_boxes(pred, prob_thresh, nms_thresh, boxes, probs, nms=True):
             cr = np.array([j, i], dtype=np.float32)
             xy = (box[:2] + cr) / side
             boxes[g*num + k][:2] = xy
-            # if sqrt:
-            #     boxes[g * num + k][2:] = np.square(box[2:])
-            # else:
             boxes[g*num + k][2:] = box[2:]
 
             prob = obj*pred[i, j, num*5:]
             mask = prob > prob_thresh
             probs[g*num+k, mask] = prob[mask]
-            # probs[g*num+k, prob != prob.max()] = 0
-            # for z in range(classes):
-            #     prob = obj * pred[i, j, num * 5 + z]
-            #     probs[g*num+k, z] = prob if prob > prob_thresh else 0
 
     # for line in probs:
     #     print("prob: {}".format(line))
