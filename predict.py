@@ -224,8 +224,8 @@ def get_detection_boxes(pred, prob_thresh, nms_thresh, boxes, probs, nms=True):
     return: probs, boxes
     """
     pred = pred.data.squeeze(0)
-    print("pred: {}".format(pred))
     pred = pred.numpy()
+    print("pred: {}".format(pred))
     # probs = np.zeros((side*side*num, classes))
     # boxes = np.zeros((side*side*num, 4))
 
