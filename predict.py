@@ -304,7 +304,6 @@ def get_pred_1(image,model_name,weight,mode=1,use_gpu=True):
         model.to(gpudevice)
     # h, w, _ = image.shape
     img = img_trans(image)
-    print("NN input: {}".format(img))
     if use_gpu:
         img = img.to(gpudevice)
     with torch.no_grad():
@@ -432,6 +431,8 @@ def get_test_result(model_name, image_name, weight, prob_thresh=0.2, nms_thresh=
     boxes = np.zeros((total, 4))
     since = time.time()
     get_detection_boxes(pred, prob_thresh, nms_thresh, boxes, probs,True)
+    print("probs: {}".format(probs))
+    print("boxes: {}".format(boxes))
     print("get detection boxe:%fs" % (time.time()-since))
     # with open('C/dets.np','wb') as fp:
     #     absp = os.path.abspath(image_name)
