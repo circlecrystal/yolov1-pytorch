@@ -253,6 +253,9 @@ def get_detection_boxes(pred, prob_thresh, nms_thresh, boxes, probs, nms=True):
             # for z in range(classes):
             #     prob = obj * pred[i, j, num * 5 + z]
             #     probs[g*num+k, z] = prob if prob > prob_thresh else 0
+
+    print("probs: {}".format(probs))
+
     if nms:
         # since = time.time()
         do_nms(boxes, probs, nms_thresh)
@@ -451,10 +454,6 @@ def get_test_result(model_name, image_name, weight, prob_thresh=0.2, nms_thresh=
     maskbox = boxes[mask]
     maskprob = maxprob[mask]
     maskind = maxind[mask]
-    print("mask: {}".format(mask))
-    print("maskbox: {}".format(maskbox))
-    print("maskprob: {}".format(maskprob))
-    print("maskind: {}".format(maskind))
 
     if pd:
         output = postdeal(maskbox,maskprob,maskind,h,w)
