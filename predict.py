@@ -303,7 +303,6 @@ def get_pred_1(image,model_name,weight,mode=1,use_gpu=True):
     if use_gpu:
         pred = pred.cpu()
 
-    print("NN output: {}".format(pred))
     return pred
 
 
