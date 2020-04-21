@@ -67,7 +67,6 @@ test_loader_size = len(test_loader)
 
 
 def train_model(model_name, num_epochs):
-
     # The device that tensors are stored (GPU if available)
     if torch.cuda.is_available():
         device = torch.device("cuda:0")
@@ -79,7 +78,7 @@ def train_model(model_name, num_epochs):
 
     model = get_model_ft(model_name)
     model.to(device)
-    criterion = YOLOLoss(side=side, num=num, sqrt=sqrt, coord_scale=coord_scale, noobj_scale=noobj_scale, vis=vis,device=device)
+    criterion = YOLOLoss(side=side, num=num, sqrt=sqrt, coord_scale=coord_scale, noobj_scale=noobj_scale, vis=None, device=device)
     optimizer = optim.SGD(model.parameters(), lr=initial_lr, momentum=0.9, weight_decay=weight_decay)
     scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=[30, 40], gamma=0.1, last_epoch=-1)
 
