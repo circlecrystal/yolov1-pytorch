@@ -124,9 +124,10 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
             # Update the learnable parameters
             optimizer.step()
 
-            if avg_loss < 0:
-                avg_loss = loss.item()
-            avg_loss = avg_loss*0.98+loss.item()*0.02
+            # Update the exponentially averaged training loss
+            if loss_avg < 0:
+                loss_avg = loss.item()
+            loss_avg = loss_avg*0.98+loss.item()*0.02
 
             # if prevloss < 0:
             #     prevloss = running_loss
@@ -137,22 +138,22 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
             #             diff = 4
 
             if (iteration+1) % 5 == 0 or iteration+1 == train_loader_size:
-                # # avg_loss = running_loss / (iteration + 1)
+                # # loss_avg = running_loss / (iteration + 1)
                 # if visualize:
                 #     step = 5
                 #     if train_loader_size%5 and (iteration+6)>train_loader_size and (iteration+1)<train_loader_size:
                 #         step = train_loader_size % 5
-                #     vis.plot_one(avg_loss, 'train', step, 'iter')
+                #     vis.plot_one(loss_avg, 'train', step, 'iter')
                 #     if vischange:
-                #         change = prevloss-avg_loss
+                #         change = prevloss-loss_avg
                 #         vis.plot_one(change / diff, 'change', step, 'iter', 'rate')
-                #         prevloss = avg_loss
+                #         prevloss = loss_avg
                 #         diff = step
                 print('Epoch [%d/%d], Iter [%d/%d] Loss: %.4f, average_loss: %.4f' %
-                      (epoch+1, num_epochs, iteration+1, train_loader_size, loss.item(), avg_loss))
+                      (epoch+1, num_epochs, iteration+1, train_loader_size, loss.item(), loss_avg))
                 if log:
                     logfile.write('Epoch [%d/%d], Iter [%d/%d] Loss: %.4f, average_loss: %.4f\n' %
-                                  (epoch+1, num_epochs, iteration+1, train_loader_size, loss.item(), avg_loss))
+                                  (epoch+1, num_epochs, iteration+1, train_loader_size, loss.item(), loss_avg))
 
         if scheduler is not None and not dyn:
             scheduler.step()
