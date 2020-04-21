@@ -84,9 +84,9 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
     for epoch in range(start_epoch+1, num_epochs):
         model.train()
         # if scheduler is None:
-        #     # for i, step in enumerate(steps):
+        #     # for iteration, step in enumerate(steps):
         #     #     if epoch == step:
-        #     #         lr = lr * lr_scale[i]
+        #     #         lr = lr * lr_scale[iteration]
         #     #         break
         #     if s < len(steps) and steps[s] == epoch:
         #         lr = lr * lr_scale[s]
@@ -104,16 +104,24 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
 
         running_loss = 0.0
 
-        for i, (inputs, targets) in enumerate(train_dataloader):
+        # Iterations
+        for iteration, (inputs, targets) in enumerate(train_dataloader):
             # Get a batch of training data and targets
             inputs, targets = inputs.to(device), targets.to(device)
-
-            output = model(inputs)
-            loss = criterion(output, targets)
+            # Forward pass
+            outputs = model(inputs)
+            # Compute the Yolov1 training loss
+            loss = criterion(outputs, targets)
+            # Get the Yolov1 loss of this batch
             running_loss += loss.item()
 
+            # Zeroing the accumulated gradients
             optimizer.zero_grad()
+            # Backward pass
+            # with amp.scale_loss(loss, optimizer) as scaled_loss:
+            #     scaled_loss.backward()
             loss.backward()
+            # Update the learnable parameters
             optimizer.step()
 
             if avg_loss < 0:
@@ -128,11 +136,11 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
             #             vis.plot_one(0, 'change', 4, 'iter', 'rate')
             #             diff = 4
 
-            if (i+1) % 5 == 0 or i+1 == train_loader_size:
-                # # avg_loss = running_loss / (i + 1)
+            if (iteration+1) % 5 == 0 or iteration+1 == train_loader_size:
+                # # avg_loss = running_loss / (iteration + 1)
                 # if visualize:
                 #     step = 5
-                #     if train_loader_size%5 and (i+6)>train_loader_size and (i+1)<train_loader_size:
+                #     if train_loader_size%5 and (iteration+6)>train_loader_size and (iteration+1)<train_loader_size:
                 #         step = train_loader_size % 5
                 #     vis.plot_one(avg_loss, 'train', step, 'iter')
                 #     if vischange:
@@ -141,10 +149,10 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
                 #         prevloss = avg_loss
                 #         diff = step
                 print('Epoch [%d/%d], Iter [%d/%d] Loss: %.4f, average_loss: %.4f' %
-                      (epoch+1, num_epochs, i+1, train_loader_size, loss.item(), avg_loss))
+                      (epoch+1, num_epochs, iteration+1, train_loader_size, loss.item(), avg_loss))
                 if log:
                     logfile.write('Epoch [%d/%d], Iter [%d/%d] Loss: %.4f, average_loss: %.4f\n' %
-                                  (epoch+1, num_epochs, i+1, train_loader_size, loss.item(), avg_loss))
+                                  (epoch+1, num_epochs, iteration+1, train_loader_size, loss.item(), avg_loss))
 
         if scheduler is not None and not dyn:
             scheduler.step()
@@ -162,7 +170,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
     #     if validate:
     #         validation_loss = 0.0
     #         model.eval()
-    #         for i, (imgs, target) in enumerate(test_loader):
+    #         for iteration, (imgs, target) in enumerate(test_loader):
     #             imgs = imgs.to(device)
     #             target = target.to(device)
 
