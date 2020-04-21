@@ -104,12 +104,12 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
 
         running_loss = 0.0
 
-        for i, (images, labels) in enumerate(train_dataloader):
-            images = images.to(device)
-            labels = labels.to(device)
+        for i, (inputs, targets) in enumerate(train_dataloader):
+            # Get a batch of training data and targets
+            inputs, targets = inputs.to(device), targets.to(device))
 
-            output = model(images)
-            loss = criterion(output, labels)
+            output = model(inputs)
+            loss = criterion(output, targets)
             running_loss += loss.item()
 
             optimizer.zero_grad()
