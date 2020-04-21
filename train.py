@@ -48,7 +48,6 @@ inp_size = int(d['inp_size'])
 # momentum = float(d['momentum'])
 # weight_decay = float(d['weight_decay'])
 visualize = True
-log = True
 validate = True
 vischange = False
 save_final = False
@@ -58,9 +57,9 @@ save_final = False
 # ])
 
 train_dataset = VocDataset('data/train.txt', side=side, num=num, input_size=inp_size, augmentation=False, transform=None)
-train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
+trainloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 # train_dataset_size = len(train_dataset)
-train_loader_size = len(train_dataloader)
+train_loader_size = len(trainloader)
 
 test_dataset = VocDataset('data/voc_2007_test.txt', side=side, num=num, input_size=inp_size, augmentation=False, transform=None)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
@@ -76,8 +75,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
     best_test_loss = np.inf
     lr = initial_lr
     s = 0
-    prevloss = -1
-    avg_loss = -1
+    loss_avg = -1
 
     if dyn:
         print('using dynamic learning rate')
@@ -105,7 +103,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
         running_loss = 0.0
 
         # Iterations
-        for iteration, (inputs, targets) in enumerate(train_dataloader):
+        for iteration, (inputs, targets) in enumerate(trainloader):
             # Get a batch of training data and targets
             inputs, targets = inputs.to(device), targets.to(device)
             # Forward pass
@@ -129,38 +127,14 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
                 loss_avg = loss.item()
             loss_avg = loss_avg*0.98+loss.item()*0.02
 
-            # if prevloss < 0:
-            #     prevloss = running_loss
-            #     if visualize:
-            #         vis.plot_one(running_loss, 'train', 4, 'iter')
-            #         if vischange:
-            #             vis.plot_one(0, 'change', 4, 'iter', 'rate')
-            #             diff = 4
-
-            if (iteration+1) % 5 == 0 or iteration+1 == train_loader_size:
-                # # loss_avg = running_loss / (iteration + 1)
-                # if visualize:
-                #     step = 5
-                #     if train_loader_size%5 and (iteration+6)>train_loader_size and (iteration+1)<train_loader_size:
-                #         step = train_loader_size % 5
-                #     vis.plot_one(loss_avg, 'train', step, 'iter')
-                #     if vischange:
-                #         change = prevloss-loss_avg
-                #         vis.plot_one(change / diff, 'change', step, 'iter', 'rate')
-                #         prevloss = loss_avg
-                #         diff = step
-                print('Epoch [%d/%d], Iter [%d/%d] Loss: %.4f, average_loss: %.4f' %
-                      (epoch+1, num_epochs, iteration+1, train_loader_size, loss.item(), loss_avg))
-                if log:
-                    logfile.write('Epoch [%d/%d], Iter [%d/%d] Loss: %.4f, average_loss: %.4f\n' %
-                                  (epoch+1, num_epochs, iteration+1, train_loader_size, loss.item(), loss_avg))
+            if iteration % 5 == 0 or iteration + 1 == len(trainloader):
+                print("Epoch [{}/{}], Iter [{}/{}] Loss: {:.4f}, average_loss: {:.4f}"\
+                    .format(epoch, num_epochs, iteration, len(trainloader), loss.item(), loss_avg))
 
         if scheduler is not None and not dyn:
             scheduler.step()
 
         # print('\nEpoch[{}], average loss: {:.4f}\n'.format(epoch+1, running_loss/train_loader_size))
-        # if log:
-        #     logfile.write('Epoch[{}], average loss: {:.4f}\n'.format(epoch+1, running_loss/train_loader_size))
 
     #     if s < len(steps) and (epoch+1) == steps[s]:
     #         print("save {}, step {}, learning rate {}".format(model_name, epoch+1, lr))
@@ -185,19 +159,12 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
 
     #         if visualize:
     #             vis.plot_many_stack({'train': running_loss / train_loader_size, 'val': validation_loss})
-    #         if log:
-    #             logfile.write('epoch[{}/{}], validation loss:{}\n'.format(epoch + 1, num_epochs, validation_loss))
     #         print('validation loss:{}'.format(validation_loss))
 
     #         if best_test_loss > validation_loss:
     #             best_test_loss = validation_loss
     #             print('epoch%d, get best test loss %.5f' % (epoch+1, best_test_loss))
-    #             if log:
-    #                 logfile.write('epoch[{}/{}], best test loss:{}\n'.format(epoch + 1, num_epochs, best_test_loss))
     #             torch.save({'epoch': epoch, 'best_loss':best_test_loss, 'lr': lr, 'model': model.state_dict()}, backupdir+'{}_best.pth'.format(model_name))
-
-    #     if log:
-    #         logfile.flush()
 
     # # end
     # if num_epochs > 20 or save_final:
@@ -207,9 +174,6 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
     # m = (time_elapsed % 3600) // 60
     # s = time_elapsed % 60
     # print('{} epochs, spend {}h:{}m:{:.0f}s'.format(num_epochs, h, m, s))
-    # if log:
-    #     logfile.write('{} epochs, spend {}h:{}m:{:.0f}s\n'.format(num_epochs, h, m, s))
-    #     logfile.close()
 
 
 def arg_parse():
@@ -232,10 +196,6 @@ vis = None
 if visualize:
     from visualize import Visualizer
     vis = Visualizer(env='{}{}_{}'.format(model_name, env, time.strftime('%m%d%H%M')))
-if log:
-    if not os.path.exists('log'):
-        os.mkdir('log')
-    logfile = open('log/{}_{}.train.log'.format(model_name, time.strftime('%m%d%H%M')),'w')
 
 start_epoch = -1
 if args.weight is not None:
