@@ -106,7 +106,7 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
 
         for i, (inputs, targets) in enumerate(train_dataloader):
             # Get a batch of training data and targets
-            inputs, targets = inputs.to(device), targets.to(device))
+            inputs, targets = inputs.to(device), targets.to(device)
 
             output = model(inputs)
             loss = criterion(output, targets)
