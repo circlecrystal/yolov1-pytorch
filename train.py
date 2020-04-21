@@ -75,7 +75,6 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
     best_test_loss = np.inf
     lr = initial_lr
     s = 0
-    loss_avg = -1
 
     if dyn:
         print('using dynamic learning rate')
@@ -101,6 +100,8 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
         print('-' * 16)
 
         running_loss = 0.0
+
+        loss_avg = -1
 
         # Iterations
         for iteration, (inputs, targets) in enumerate(trainloader):
