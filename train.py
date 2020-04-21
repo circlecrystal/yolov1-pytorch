@@ -153,54 +153,54 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
         # if log:
         #     logfile.write('Epoch[{}], average loss: {:.4f}\n'.format(epoch+1, running_loss/train_loader_size))
 
-        if s < len(steps) and (epoch+1) == steps[s]:
-            print("save {}, step {}, learning rate {}".format(model_name, epoch+1, lr))
-            torch.save({'epoch': epoch, 'lr': lr, 'model': model.state_dict()}, backupdir+"{}_step_{}.pth".format(model_name, epoch+1))
-            s += 1
+    #     if s < len(steps) and (epoch+1) == steps[s]:
+    #         print("save {}, step {}, learning rate {}".format(model_name, epoch+1, lr))
+    #         torch.save({'epoch': epoch, 'lr': lr, 'model': model.state_dict()}, backupdir+"{}_step_{}.pth".format(model_name, epoch+1))
+    #         s += 1
 
-        # validation
-        if validate:
-            validation_loss = 0.0
-            model.eval()
-            for i, (imgs, target) in enumerate(test_loader):
-                imgs = imgs.to(device)
-                target = target.to(device)
+    #     # validation
+    #     if validate:
+    #         validation_loss = 0.0
+    #         model.eval()
+    #         for i, (imgs, target) in enumerate(test_loader):
+    #             imgs = imgs.to(device)
+    #             target = target.to(device)
 
-                out = model(imgs)
-                loss = criterion(out, target)
-                validation_loss += loss.item()
+    #             out = model(imgs)
+    #             loss = criterion(out, target)
+    #             validation_loss += loss.item()
 
-            validation_loss /= test_loader_size
-            if scheduler is not None and dyn:
-                scheduler.step(validation_loss)
+    #         validation_loss /= test_loader_size
+    #         if scheduler is not None and dyn:
+    #             scheduler.step(validation_loss)
 
-            if visualize:
-                vis.plot_many_stack({'train': running_loss / train_loader_size, 'val': validation_loss})
-            if log:
-                logfile.write('epoch[{}/{}], validation loss:{}\n'.format(epoch + 1, num_epochs, validation_loss))
-            print('validation loss:{}'.format(validation_loss))
+    #         if visualize:
+    #             vis.plot_many_stack({'train': running_loss / train_loader_size, 'val': validation_loss})
+    #         if log:
+    #             logfile.write('epoch[{}/{}], validation loss:{}\n'.format(epoch + 1, num_epochs, validation_loss))
+    #         print('validation loss:{}'.format(validation_loss))
 
-            if best_test_loss > validation_loss:
-                best_test_loss = validation_loss
-                print('epoch%d, get best test loss %.5f' % (epoch+1, best_test_loss))
-                if log:
-                    logfile.write('epoch[{}/{}], best test loss:{}\n'.format(epoch + 1, num_epochs, best_test_loss))
-                torch.save({'epoch': epoch, 'best_loss':best_test_loss, 'lr': lr, 'model': model.state_dict()}, backupdir+'{}_best.pth'.format(model_name))
+    #         if best_test_loss > validation_loss:
+    #             best_test_loss = validation_loss
+    #             print('epoch%d, get best test loss %.5f' % (epoch+1, best_test_loss))
+    #             if log:
+    #                 logfile.write('epoch[{}/{}], best test loss:{}\n'.format(epoch + 1, num_epochs, best_test_loss))
+    #             torch.save({'epoch': epoch, 'best_loss':best_test_loss, 'lr': lr, 'model': model.state_dict()}, backupdir+'{}_best.pth'.format(model_name))
 
-        if log:
-            logfile.flush()
+    #     if log:
+    #         logfile.flush()
 
-    # end
-    if num_epochs > 20 or save_final:
-        torch.save({'epoch':num_epochs-1, 'lr':lr, 'model':model.state_dict()}, backupdir+'{}_final.pth'.format(model_name))
-    time_elapsed = int(time.time() - since)
-    h = time_elapsed // 3600
-    m = (time_elapsed % 3600) // 60
-    s = time_elapsed % 60
-    print('{} epochs, spend {}h:{}m:{:.0f}s'.format(num_epochs, h, m, s))
-    if log:
-        logfile.write('{} epochs, spend {}h:{}m:{:.0f}s\n'.format(num_epochs, h, m, s))
-        logfile.close()
+    # # end
+    # if num_epochs > 20 or save_final:
+    #     torch.save({'epoch':num_epochs-1, 'lr':lr, 'model':model.state_dict()}, backupdir+'{}_final.pth'.format(model_name))
+    # time_elapsed = int(time.time() - since)
+    # h = time_elapsed // 3600
+    # m = (time_elapsed % 3600) // 60
+    # s = time_elapsed % 60
+    # print('{} epochs, spend {}h:{}m:{:.0f}s'.format(num_epochs, h, m, s))
+    # if log:
+    #     logfile.write('{} epochs, spend {}h:{}m:{:.0f}s\n'.format(num_epochs, h, m, s))
+    #     logfile.close()
 
 
 def arg_parse():
