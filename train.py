@@ -66,7 +66,7 @@ test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num
 test_loader_size = len(test_loader)
 
 
-def train_model(model_name, scheduler, num_epochs, dyn=False):
+def train_model(model_name, num_epochs):
 
     # The device that tensors are stored (GPU if available)
     if torch.cuda.is_available():
@@ -140,4 +140,4 @@ if not os.path.exists('backup'):
 backupdir = 'backup/db07/'
 if not os.path.exists(backupdir):
         os.mkdir(backupdir)
-train_model(model_name, num_epochs=num_epochs,dyn=False)
+train_model(model_name, num_epochs=num_epochs)
