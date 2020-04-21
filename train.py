@@ -170,7 +170,7 @@ def train(target, sample_mode, enable_aug, window_size, batch_size,
                 print("Epoch [{}/{}], Iter [{}/{}] Loss: {:.4f}, average_loss: {:.4f}"\
                     .format(epoch, num_epochs, iteration, len(trainloader), loss.item(), loss_avg))
 
-        if scheduler is not None and not dyn:
+        if scheduler is not None:
             scheduler.step()
 
 
