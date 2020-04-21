@@ -66,7 +66,8 @@ test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num
 test_loader_size = len(test_loader)
 
 
-def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
+def train_model(model_name, scheduler, num_epochs, dyn=False):
+
     # The device that tensors are stored (GPU if available)
     if torch.cuda.is_available():
         device = torch.device("cuda:0")
@@ -75,6 +76,12 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
         # set_start_method("spawn")
     else:
         device = torch.device("cpu")
+
+    model = get_model_ft(model_name)
+    model.to(device)
+    criterion = YOLOLoss(side=side, num=num, sqrt=sqrt, coord_scale=coord_scale, noobj_scale=noobj_scale, vis=vis,device=device)
+    optimizer = optim.SGD(model.parameters(), lr=initial_lr, momentum=0.9, weight_decay=weight_decay)
+    scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=[30, 40], gamma=0.1, last_epoch=-1)
 
     for epoch in range(1, num_epochs + 1):
         running_loss = 0
@@ -137,41 +144,9 @@ if visualize:
     from visualize import Visualizer
     vis = Visualizer(env='{}{}_{}'.format(model_name, env, time.strftime('%m%d%H%M')))
 
-start_epoch = -1
-if args.weight is not None:
-    model_ft, start_epoch, lr = load_model_trd(model_name, args.weight)
-    print('weight loaded', 'epoch:', start_epoch+1, 'lr:', lr)
-else:
-    print('no weight specified, training from 0')
-    model_ft = get_model_ft(model_name)
-    # sys.exit(1)
-assert model_ft is not None
-# print(model_ft)
-
-model_ft.to(device)
-
-# vis = Visualizer('cood2loss_2_cmp_{}'.format(time.strftime('%m%d%H%M')))
-criterion = YOLOLoss(side=side, num=num, sqrt=sqrt, coord_scale=coord_scale, noobj_scale=noobj_scale, vis=vis,device=device)
-
-# params=[]
-# params_dict = dict(model_ft.named_parameters())
-# for key,value in params_dict.items():
-#     print(key,value.shape)
-#     if key.startswith('features'):
-#         params += [{'params':[value],'lr':initial_lr*1}]
-#     else:
-#         params += [{'params':[value],'lr':initial_lr}]
-optimizer_ft = optim.SGD(model_ft.parameters(), lr=initial_lr, momentum=momentum, weight_decay=weight_decay)
-# optimizer_ft = adabound.AdaBound(model_ft.parameters(),lr=1e-3,final_lr=0.1)
-# scheduler_dyn = lr_scheduler.ReduceLROnPlateau(optimizer_ft,mode='min',patience=3,verbose=True)
-if start_epoch != -1:
-    for group in optimizer_ft.param_groups:
-        group.setdefault('initial_lr', initial_lr)
-scheduler = lr_scheduler.MultiStepLR(optimizer_ft, milestones=steps, gamma=0.1, last_epoch=start_epoch)
-
 if not os.path.exists('backup'):
     os.mkdir('backup')
 backupdir = 'backup/db07/'
 if not os.path.exists(backupdir):
         os.mkdir(backupdir)
-train_model(model_ft, criterion, optimizer_ft, scheduler, num_epochs=num_epochs,dyn=False)
+train_model(model_name, scheduler, num_epochs=num_epochs,dyn=False)
