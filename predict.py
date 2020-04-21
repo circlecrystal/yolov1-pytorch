@@ -446,7 +446,6 @@ def get_test_result(model_name, image_name, weight, prob_thresh=0.2, nms_thresh=
 
     if pd:
         output = postdeal(maskbox,maskprob,maskind,h,w)
-        print(output)
     else:
         maskbox = correct_boxes(maskbox,h,w)
         maskprob = maxprob[mask].reshape(-1, 1)
