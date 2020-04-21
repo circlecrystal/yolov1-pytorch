@@ -53,16 +53,16 @@ validate = True
 vischange = False
 save_final = False
 
-data_transforms = transforms.Compose([
-    # transforms.ToTensor(),
-])
+# data_transforms = transforms.Compose([
+#     # transforms.ToTensor(),
+# ])
 
-train_dataset = VocDataset('data/train.txt', side=side, num=num, input_size=inp_size, augmentation=False, transform=data_transforms)
+train_dataset = VocDataset('data/train.txt', side=side, num=num, input_size=inp_size, augmentation=False, transform=None)
 train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
 # train_dataset_size = len(train_dataset)
 train_loader_size = len(train_dataloader)
 
-test_dataset = VocDataset('data/voc_2007_test.txt', side=side, num=num, input_size=inp_size, augmentation=False, transform=data_transforms)
+test_dataset = VocDataset('data/voc_2007_test.txt', side=side, num=num, input_size=inp_size, augmentation=False, transform=None)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
 test_loader_size = len(test_loader)
 
@@ -120,26 +120,26 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
                 avg_loss = loss.item()
             avg_loss = avg_loss*0.98+loss.item()*0.02
 
-            if prevloss < 0:
-                prevloss = running_loss
-                if visualize:
-                    vis.plot_one(running_loss, 'train', 4, 'iter')
-                    if vischange:
-                        vis.plot_one(0, 'change', 4, 'iter', 'rate')
-                        diff = 4
+            # if prevloss < 0:
+            #     prevloss = running_loss
+            #     if visualize:
+            #         vis.plot_one(running_loss, 'train', 4, 'iter')
+            #         if vischange:
+            #             vis.plot_one(0, 'change', 4, 'iter', 'rate')
+            #             diff = 4
 
             if (i+1) % 5 == 0 or i+1 == train_loader_size:
-                # avg_loss = running_loss / (i + 1)
-                if visualize:
-                    step = 5
-                    if train_loader_size%5 and (i+6)>train_loader_size and (i+1)<train_loader_size:
-                        step = train_loader_size % 5
-                    vis.plot_one(avg_loss, 'train', step, 'iter')
-                    if vischange:
-                        change = prevloss-avg_loss
-                        vis.plot_one(change / diff, 'change', step, 'iter', 'rate')
-                        prevloss = avg_loss
-                        diff = step
+                # # avg_loss = running_loss / (i + 1)
+                # if visualize:
+                #     step = 5
+                #     if train_loader_size%5 and (i+6)>train_loader_size and (i+1)<train_loader_size:
+                #         step = train_loader_size % 5
+                #     vis.plot_one(avg_loss, 'train', step, 'iter')
+                #     if vischange:
+                #         change = prevloss-avg_loss
+                #         vis.plot_one(change / diff, 'change', step, 'iter', 'rate')
+                #         prevloss = avg_loss
+                #         diff = step
                 print('Epoch [%d/%d], Iter [%d/%d] Loss: %.4f, average_loss: %.4f' %
                       (epoch+1, num_epochs, i+1, train_loader_size, loss.item(), avg_loss))
                 if log:
