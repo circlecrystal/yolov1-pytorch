@@ -65,43 +65,23 @@ test_dataset = VocDataset('data/voc_2007_test.txt', side=side, num=num, input_si
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
 test_loader_size = len(test_loader)
 
-device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
-print(device)
-
 
 def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
-    since = time.time()
-    # best_model_wts = copy.deepcopy(model.state_dict())
-    best_test_loss = np.inf
-    lr = initial_lr
-    s = 0
+    # The device that tensors are stored (GPU if available)
+    if torch.cuda.is_available():
+        device = torch.device("cuda:0")
 
-    if dyn:
-        print('using dynamic learning rate')
-    for epoch in range(start_epoch+1, num_epochs):
-        model.train()
-        # if scheduler is None:
-        #     # for iteration, step in enumerate(steps):
-        #     #     if epoch == step:
-        #     #         lr = lr * lr_scale[iteration]
-        #     #         break
-        #     if s < len(steps) and steps[s] == epoch:
-        #         lr = lr * lr_scale[s]
-        #         s += 1
-        #     for param_group in optimizer.param_groups:
-        #         param_group['lr'] = lr
-        # else:
-        #     scheduler.step()
-        #     lr = scheduler.get_lr()
-        if scheduler is not None and not dyn:
-            lr = scheduler.get_lr()
+        # Multiprocessing CUDA tensors is supported with "spawn" or "forkserver"
+        # set_start_method("spawn")
+    else:
+        device = torch.device("cpu")
 
-        print('Epoch {}/{}, lr:{}'.format(epoch + 1, num_epochs, lr))
-        print('-' * 16)
-
-        running_loss = 0.0
-
+    for epoch in range(1, num_epochs + 1):
+        running_loss = 0
         loss_avg = -1
+
+        # Switch to training mode
+        model.train()
 
         # Iterations
         for iteration, (inputs, targets) in enumerate(trainloader):
@@ -134,47 +114,6 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
 
         if scheduler is not None and not dyn:
             scheduler.step()
-
-        # print('\nEpoch[{}], average loss: {:.4f}\n'.format(epoch+1, running_loss/train_loader_size))
-
-    #     if s < len(steps) and (epoch+1) == steps[s]:
-    #         print("save {}, step {}, learning rate {}".format(model_name, epoch+1, lr))
-    #         torch.save({'epoch': epoch, 'lr': lr, 'model': model.state_dict()}, backupdir+"{}_step_{}.pth".format(model_name, epoch+1))
-    #         s += 1
-
-    #     # validation
-    #     if validate:
-    #         validation_loss = 0.0
-    #         model.eval()
-    #         for iteration, (imgs, target) in enumerate(test_loader):
-    #             imgs = imgs.to(device)
-    #             target = target.to(device)
-
-    #             out = model(imgs)
-    #             loss = criterion(out, target)
-    #             validation_loss += loss.item()
-
-    #         validation_loss /= test_loader_size
-    #         if scheduler is not None and dyn:
-    #             scheduler.step(validation_loss)
-
-    #         if visualize:
-    #             vis.plot_many_stack({'train': running_loss / train_loader_size, 'val': validation_loss})
-    #         print('validation loss:{}'.format(validation_loss))
-
-    #         if best_test_loss > validation_loss:
-    #             best_test_loss = validation_loss
-    #             print('epoch%d, get best test loss %.5f' % (epoch+1, best_test_loss))
-    #             torch.save({'epoch': epoch, 'best_loss':best_test_loss, 'lr': lr, 'model': model.state_dict()}, backupdir+'{}_best.pth'.format(model_name))
-
-    # # end
-    # if num_epochs > 20 or save_final:
-    #     torch.save({'epoch':num_epochs-1, 'lr':lr, 'model':model.state_dict()}, backupdir+'{}_final.pth'.format(model_name))
-    # time_elapsed = int(time.time() - since)
-    # h = time_elapsed // 3600
-    # m = (time_elapsed % 3600) // 60
-    # s = time_elapsed % 60
-    # print('{} epochs, spend {}h:{}m:{:.0f}s'.format(num_epochs, h, m, s))
 
 
 def arg_parse():
