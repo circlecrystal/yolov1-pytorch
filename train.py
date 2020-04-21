@@ -97,7 +97,6 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
         #     scheduler.step()
         #     lr = scheduler.get_lr()
         if scheduler is not None and not dyn:
-            scheduler.step()
             lr = scheduler.get_lr()
 
         print('Epoch {}/{}, lr:{}'.format(epoch + 1, num_epochs, lr))
@@ -146,6 +145,9 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
                 if log:
                     logfile.write('Epoch [%d/%d], Iter [%d/%d] Loss: %.4f, average_loss: %.4f\n' %
                                   (epoch+1, num_epochs, i+1, train_loader_size, loss.item(), avg_loss))
+
+        if scheduler is not None and not dyn:
+            scheduler.step()
 
         # print('\nEpoch[{}], average loss: {:.4f}\n'.format(epoch+1, running_loss/train_loader_size))
         # if log:
