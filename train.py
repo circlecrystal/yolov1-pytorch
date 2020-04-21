@@ -134,19 +134,10 @@ def arg_parse():
 
 args = arg_parse()
 model_name = args.net
-env = args.env
-if env is None:
-    print('no visdom-environment specified, visualization off')
-    visualize = False
-    # sys.exit(1)
-vis = None
-if visualize:
-    from visualize import Visualizer
-    vis = Visualizer(env='{}{}_{}'.format(model_name, env, time.strftime('%m%d%H%M')))
 
 if not os.path.exists('backup'):
     os.mkdir('backup')
 backupdir = 'backup/db07/'
 if not os.path.exists(backupdir):
         os.mkdir(backupdir)
-train_model(model_name, scheduler, num_epochs=num_epochs,dyn=False)
+train_model(model_name, num_epochs=num_epochs,dyn=False)
