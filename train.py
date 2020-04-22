@@ -128,7 +128,7 @@ def train(target, sample_mode, enable_aug, window_size, batch_size,
     #     detnet_block=False,
     #     downsample=False
     # ).to(device)
-    model = get_model_ft("resnet50", pretrained=False).to(device)
+    model = get_model_ft("resnet50", pretrained=True).to(device)
 
     criterion = YOLOLoss(side=side, num=num, sqrt=sqrt, coord_scale=coord_scale, noobj_scale=noobj_scale, vis=None, device=device)
     optimizer = optim.SGD(model.parameters(), lr=initial_lr, momentum=0.9, weight_decay=weight_decay)
