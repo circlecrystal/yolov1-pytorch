@@ -6,7 +6,6 @@ from loss import YOLOLoss
 import torch.optim as optim
 from torch.optim import lr_scheduler
 from ftd_model import get_model_ft,load_model_trd
-from mresnet import resnet50
 from util import readcfg
 from torchvision import transforms
 import numpy as np
