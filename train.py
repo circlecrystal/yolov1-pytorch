@@ -10,21 +10,10 @@ from util import readcfg
 from torchvision import transforms
 import numpy as np
 import torch.nn as nn
-# from mmodels import mvgg
 import os
 #from adabound import adabound
 import argparse
 import sys
-# side = 7
-# num = 2
-# classes = 20
-# sqrt = 1
-# noobj_scale = .5
-# coord_scale = 5.
-# object_scale = 1.
-# class_scale = 1.
-# batch_size = 16
-# inp_size = 448
 initial_lr = 0.001
 momentum = 0.9
 weight_decay = 5e-4
@@ -41,173 +30,168 @@ noobj_scale = float(d['noobj_scale'])
 coord_scale = float(d['coord_scale'])
 object_scale = float(d['object_scale'])
 class_scale = float(d['class_scale'])
-# batch_size = int(d['batch_size'])
 batch_size = 16  # if gpu memory is enough, 16 ~ 64 is ok
 inp_size = int(d['inp_size'])
-# initial_lr = float(d['initial_lr'])
-# momentum = float(d['momentum'])
-# weight_decay = float(d['weight_decay'])
 visualize = True
-validate = True
+log = True
+validate = False
 vischange = False
 save_final = False
 
-# data_transforms = transforms.Compose([
-#     # transforms.ToTensor(),
-# ])
+data_transforms = transforms.Compose([])
 
-train_dataset = VocDataset('data/train.txt', side=side, num=num, input_size=inp_size, augmentation=False, transform=None)
-trainloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
-# train_dataset_size = len(train_dataset)
-train_loader_size = len(trainloader)
+train_dataset = VocDataset('data/train07.txt', side=side, num=num, input_size=inp_size, augmentation=True, transform=data_transforms)
+train_dataloader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True, num_workers=4)
+train_loader_size = len(train_dataloader)
 
-test_dataset = VocDataset('data/voc_2007_test.txt', side=side, num=num, input_size=inp_size, augmentation=False, transform=None)
+test_dataset = VocDataset('data/voc_2007_test.txt', side=side, num=num, input_size=inp_size, augmentation=False, transform=data_transforms)
 test_loader = DataLoader(test_dataset, batch_size=batch_size, shuffle=False, num_workers=4)
 test_loader_size = len(test_loader)
 
+device = torch.device('cuda:0' if torch.cuda.is_available() else 'cpu')
+print(device)
 
-def train(target, sample_mode, enable_aug, window_size, batch_size,
-          num_worker, num_boxes, num_cells_x, num_cells_y, conf_threshold,
-          iou_threshold, lr, reg, lambda_coord, lambda_noobj,
-          lambda_response, lambda_response_not, min_area, min_visibility,
-          num_epochs, start_from, eval_level, output_dir):
-    """
-    Args:
-        target (str): the target dataset
-        sample_mode (boolean): report specs on the sampled trainset or the
-            entire trainset
-        enable_aug (boolean): enable data augmentation or not
-        window_size (int): the width and height of the resized image
-        batch_size (int): the batch size of SGD
-        num_worker (int): the number of parallel processes
-        num_boxes (int): the number of bounding boxes to detect per cell
-        num_cells_x (int): the number of grid cells along the x-axis
-        num_cells_y (int): the number of grid cells along the y-axis
-        conf_threshold (float): When the confidence score of the box
-            predictor is smaller than this conf_threshold, we remove the
-            box predictor from the result.
-        iou_threshold (float): When the IoU between the higher and lower
-            confidence bounding boxes is larger than or equal to this IoU
-            threshold value, the lower confidence bounding box is removed.
-        lr (float): the learning rate
-        reg (float): the regularization strength
-        lambda_coord (float): the parameter for adjusting the strength of the
-            object-related part of the loss function
-        lambda_noobj (float): the parameter for adjusting the strength of the
-            background-related part of the loss function
-        lambda_response (float): the parameter for adjusting the strength of
-            the object detection confidence part of the loss function
-        lambda_response_not (float): the parameter for adjusting the penalty
-            of the false positive bounding boxes of the loss function
-        min_area (float): The minimum area of a bounding box. All bounding
-            boxes hose visible area in pixels is less than this value will be
-            removed.
-        min_visibility (float): he minimum fraction of area for a bounding
-            box to remain this box in list
-        num_epochs (int): the number of epochs
-        start_from (int): the number of epochs where the evaluation starts
-        eval_level (str): the evaluation level "minimal", "compact" or "full"
-        output_dir (str): the place for storing the trained model and the TB
-            data of training process
-    """
-    # The device that tensors are stored (GPU if available)
-    if torch.cuda.is_available():
-        device = torch.device("cuda:0")
 
-        # Multiprocessing CUDA tensors is supported with "spawn" or "forkserver"
-        # set_start_method("spawn")
-    else:
-        device = torch.device("cpu")
+def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
+    since = time.time()
+    best_test_loss = np.inf
+    lr = initial_lr
+    s = 0
+    prevloss = -1
+    avg_loss = -1
 
-    # model = resnet50(
-    #     num=num_boxes,
-    #     side=num_cells_x,
-    #     num_classes=20,
-    #     softmax=False,
-    #     detnet_block=False,
-    #     downsample=False
-    # ).to(device)
-    model = get_model_ft("resnet50", pretrained=True).to(device)
-
-    criterion = YOLOLoss(side=side, num=num, sqrt=sqrt, coord_scale=coord_scale, noobj_scale=noobj_scale, vis=None, device=device)
-    optimizer = optim.SGD(model.parameters(), lr=initial_lr, momentum=0.9, weight_decay=weight_decay)
-    scheduler = lr_scheduler.MultiStepLR(optimizer, milestones=[30, 40], gamma=0.1, last_epoch=-1)
-
-    for epoch in range(1, num_epochs + 1):
-        running_loss = 0
-        loss_avg = -1
-
-        # Switch to training mode
+    if dyn:
+        print('using dynamic learning rate')
+    for epoch in range(start_epoch+1, num_epochs):
         model.train()
 
-        # Iterations
-        for iteration, (inputs, targets) in enumerate(trainloader):
-            # Get a batch of training data and targets
-            inputs, targets = inputs.to(device), targets.to(device)
-            # Forward pass
-            outputs = model(inputs)
-            # Compute the Yolov1 training loss
-            loss = criterion(outputs, targets)
-            # Get the Yolov1 loss of this batch
+        if scheduler is not None and not dyn:
+            scheduler.step()
+            lr = scheduler.get_lr()
+
+        print('Epoch {}/{}, lr:{}'.format(epoch + 1, num_epochs, lr))
+        print('-' * 16)
+
+        running_loss = 0.0
+
+        for i, (images, labels) in enumerate(train_dataloader):
+            images = images.to(device)
+            labels = labels.to(device)
+
+            output = model(images)
+            loss = criterion(output, labels)
             running_loss += loss.item()
 
-            # Zeroing the accumulated gradients
             optimizer.zero_grad()
-            # Backward pass
-            # with amp.scale_loss(loss, optimizer) as scaled_loss:
-            #     scaled_loss.backward()
             loss.backward()
-            # Update the learnable parameters
             optimizer.step()
 
-            # Update the exponentially averaged training loss
-            if loss_avg < 0:
-                loss_avg = loss.item()
-            loss_avg = loss_avg*0.98+loss.item()*0.02
+            if avg_loss < 0:
+                avg_loss = loss.item()
+            avg_loss = avg_loss*0.98+loss.item()*0.02
 
-            if iteration % 5 == 0 or iteration + 1 == len(trainloader):
-                print("Epoch [{}/{}], Iter [{}/{}] Loss: {:.4f}, average_loss: {:.4f}"\
-                    .format(epoch, num_epochs, iteration, len(trainloader), loss.item(), loss_avg))
+            if prevloss < 0:
+                prevloss = running_loss
 
-        if scheduler is not None:
-            scheduler.step()
+            if (i+1) % 5 == 0 or i+1 == train_loader_size:
+                print('Epoch [%d/%d], Iter [%d/%d] Loss: %.4f, average_loss: %.4f' %
+                      (epoch+1, num_epochs, i+1, train_loader_size, loss.item(), avg_loss))
+                if log:
+                    logfile.write('Epoch [%d/%d], Iter [%d/%d] Loss: %.4f, average_loss: %.4f\n' %
+                                  (epoch+1, num_epochs, i+1, train_loader_size, loss.item(), avg_loss))
+
+        if s < len(steps) and (epoch+1) == steps[s]:
+            print("save {}, step {}, learning rate {}".format(model_name, epoch+1, lr))
+            torch.save({'epoch': epoch, 'lr': lr, 'model': model.state_dict()}, backupdir+"{}_step_{}.pth".format(model_name, epoch+1))
+            s += 1
+
+        # validation
+        if validate:
+            validation_loss = 0.0
+            model.eval()
+            for i, (imgs, target) in enumerate(test_loader):
+                imgs = imgs.to(device)
+                target = target.to(device)
+
+                out = model(imgs)
+                loss = criterion(out, target)
+                validation_loss += loss.item()
+
+            validation_loss /= test_loader_size
+            if scheduler is not None and dyn:
+                scheduler.step(validation_loss)
+
+            if visualize:
+                vis.plot_many_stack({'train': running_loss / train_loader_size, 'val': validation_loss})
+            if log:
+                logfile.write('epoch[{}/{}], validation loss:{}\n'.format(epoch + 1, num_epochs, validation_loss))
+            print('validation loss:{}'.format(validation_loss))
+
+            if best_test_loss > validation_loss:
+                best_test_loss = validation_loss
+                print('epoch%d, get best test loss %.5f' % (epoch+1, best_test_loss))
+                if log:
+                    logfile.write('epoch[{}/{}], best test loss:{}\n'.format(epoch + 1, num_epochs, best_test_loss))
+                torch.save({'epoch': epoch, 'best_loss':best_test_loss, 'lr': lr, 'model': model.state_dict()}, backupdir+'{}_best.pth'.format(model_name))
+
+        if log:
+            logfile.flush()
+
+    # end
+    if num_epochs > 20 or save_final:
+        torch.save({'epoch':num_epochs-1, 'lr':lr, 'model':model.state_dict()}, backupdir+'{}_final.pth'.format(model_name))
+    time_elapsed = int(time.time() - since)
+    h = time_elapsed // 3600
+    m = (time_elapsed % 3600) // 60
+    s = time_elapsed % 60
+    print('{} epochs, spend {}h:{}m:{:.0f}s'.format(num_epochs, h, m, s))
+    if log:
+        logfile.write('{} epochs, spend {}h:{}m:{:.0f}s\n'.format(num_epochs, h, m, s))
+        logfile.close()
 
 
-def main():
-    # # Initialize the learning rate and regularizer strength
-    # lr = 10 ** np.random.uniform(-3, -6)
-    # reg = 10 ** np.random.uniform(-5, 5)
-    # lambda_coord = 10 ** np.random.uniform(-2, 2)
-    # lambda_noobj = 10 ** np.random.uniform(-2, 2)
-    # print("lr = {}".format(lr))
-    # print("reg = {}".format(reg))
+def arg_parse():
+    arg_parser = argparse.ArgumentParser()
+    arg_parser.add_argument("-w", dest="weight", help="load weight", type=str)
+    arg_parser.add_argument("-n", dest="net", default="resnet50", help="backbone net", type=str)
+    arg_parser.add_argument("-env",dest="env", help="visdom environment",type=str)
 
-    train(
-        target="VOC",
-        sample_mode=False,
-        enable_aug=False,
-        window_size=448,
-        batch_size=16,
-        num_worker=4,
-        num_boxes=2,
-        num_cells_x=14,
-        num_cells_y=14,
-        conf_threshold=0.2,
-        iou_threshold=0.4,
-        lr=1e-3,
-        reg=5e-4,
-        lambda_coord=5,
-        lambda_noobj=0.25,
-        lambda_response=2,
-        lambda_response_not=1,
-        min_area=49,
-        min_visibility=0.5,
-        num_epochs=50,
-        start_from=10,
-        eval_level="lvl3",
-        output_dir="training_outputs"
-    )
+    return arg_parser.parse_args()
 
 
-if __name__ == "__main__":
-    main()
+args = arg_parse()
+model_name = args.net
+env = args.env
+if env is None:
+    print('no visdom-environment specified, visualization off')
+    visualize = False
+if log:
+    if not os.path.exists('log'):
+        os.mkdir('log')
+    logfile = open('log/{}_{}.train.log'.format(model_name, time.strftime('%m%d%H%M')),'w')
+
+start_epoch = -1
+if args.weight is not None:
+    model_ft, start_epoch, lr = load_model_trd(model_name, args.weight)
+    print('weight loaded', 'epoch:', start_epoch+1, 'lr:', lr)
+else:
+    print('no weight specified, training from 0')
+    model_ft = get_model_ft(model_name)
+assert model_ft is not None
+
+model_ft.to(device)
+
+criterion = YOLOLoss(side=side, num=num, sqrt=sqrt, coord_scale=coord_scale, noobj_scale=noobj_scale, vis=vis,device=device)
+
+optimizer_ft = optim.SGD(model_ft.parameters(), lr=initial_lr, momentum=momentum, weight_decay=weight_decay)
+if start_epoch != -1:
+    for group in optimizer_ft.param_groups:
+        group.setdefault('initial_lr', initial_lr)
+scheduler = lr_scheduler.MultiStepLR(optimizer_ft, milestones=steps, gamma=0.1, last_epoch=start_epoch)
+
+if not os.path.exists('backup'):
+    os.mkdir('backup')
+backupdir = 'backup/db07/'
+if not os.path.exists(backupdir):
+        os.mkdir(backupdir)
+train_model(model_ft, criterion, optimizer_ft, scheduler, num_epochs=num_epochs,dyn=False)
