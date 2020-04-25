@@ -121,8 +121,6 @@ def train_model(model, criterion, optimizer, scheduler, num_epochs, dyn=False):
             if scheduler is not None and dyn:
                 scheduler.step(validation_loss)
 
-            if visualize:
-                vis.plot_many_stack({'train': running_loss / train_loader_size, 'val': validation_loss})
             if log:
                 logfile.write('epoch[{}/{}], validation loss:{}\n'.format(epoch + 1, num_epochs, validation_loss))
             print('validation loss:{}'.format(validation_loss))
@@ -181,7 +179,7 @@ assert model_ft is not None
 
 model_ft.to(device)
 
-criterion = YOLOLoss(side=side, num=num, sqrt=sqrt, coord_scale=coord_scale, noobj_scale=noobj_scale, vis=vis,device=device)
+criterion = YOLOLoss(side=side, num=num, sqrt=sqrt, coord_scale=coord_scale, noobj_scale=noobj_scale, vis=None,device=device)
 
 optimizer_ft = optim.SGD(model_ft.parameters(), lr=initial_lr, momentum=momentum, weight_decay=weight_decay)
 if start_epoch != -1:
