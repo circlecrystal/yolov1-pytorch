@@ -62,7 +62,6 @@ def do_python_eval(devkit_path, year, image_set, classes, output_dir = 'results'
     aps = []
     # The PASCAL VOC metric changed in 2010
     use_07_metric = True if int(year) < 2010 else False
-    use_07_metric = False
     # use_07_metric = False
     print('VOC07 metric? ' + ('Yes' if use_07_metric else 'No'))
     print('devkit_path=',devkit_path,', year = ',year)
